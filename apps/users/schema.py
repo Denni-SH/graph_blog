@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 import graphene
+from django.db.models import Q
 from graphene_django import DjangoObjectType
 
 
@@ -40,9 +41,22 @@ class Query(graphene.ObjectType):
     '''
 
     me = graphene.Field(UserType)
-    users = graphene.List(UserType)
+    users = graphene.List(UserType, search=graphene.String(), id=graphene.ID())
 
-    def resolve_users(self, info):
+    def resolve_users(self, info, id=None, search=None):
+        if id:
+            filter = (
+                Q(pk__iexact=id)
+            )
+            return get_user_model().objects.filter(filter)
+        if search:
+            filter = (
+                Q(username__icontains=search)|
+                Q(first_name__icontains=search)|
+                Q(last_name__icontains=search)
+            )
+            return get_user_model().objects.filter(filter)
+
         return get_user_model().objects.all()
 
     def resolve_me(self, info):
