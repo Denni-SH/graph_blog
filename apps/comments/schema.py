@@ -8,6 +8,7 @@ from apps.users.schema import UserType
 from apps.posts.models import Post
 from apps.posts.schema import PostType
 
+
 class CommentType(DjangoObjectType):
     class Meta:
         model = Comment
@@ -54,15 +55,36 @@ class CreateComment(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
+    '''
+    that`s the field that you can use on query top level
+    '''
 
-    comments = graphene.List(CommentType, search=graphene.String())
+    comments = graphene.List(CommentType,
+                             search=graphene.String(),
+                             first=graphene.Int(),
+                             skip=graphene.Int(),
+                             )
 
-    def resolve_comments(self, info, search=None):
+    def resolve_comments(self, info, search=None, first=None, skip=None, **kwargs):
+        qs = Comment.objects.all()
+
         if search:
             filter = Q(content__icontains=search)
-            return Comment.objects.filter(filter)
-        return Comment.objects.all()
+            qs = qs.filter(filter)
+
+        if skip:
+            qs = qs[skip::]
+
+        if first:
+            qs = qs[:first]
+
+        return qs
 
 
 class Mutation(graphene.ObjectType):
+    '''
+    that`s the field that you can use on mutation top level
+    '''
+
     create_comment = CreateComment.Field()
+

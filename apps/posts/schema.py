@@ -47,23 +47,46 @@ class CreatePost(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
+    '''
+    that`s the field that you can use on query top level
+    '''
 
-    posts = graphene.List(PostType, search=graphene.String(), id=graphene.ID())
+    posts = graphene.List(PostType,
+                          search=graphene.String(),
+                          id=graphene.ID(),
+                          first=graphene.Int(),
+                          skip=graphene.Int(),
+                          )
 
-    def resolve_posts(self, info, id=None, search=None, **kwargs):
+    def resolve_posts(self, info, id=None, search=None, first=None, skip=None, **kwargs):
+        qs = Post.objects.all()
+
         if id:
             filter = (
                 Q(pk__iexact=id)
             )
-            return Post.objects.filter(filter)
+            qs = qs.filter(filter)
+
         if search:
             filter = (
                 Q(title__icontains=search) |
                 Q(content__icontains=search)
             )
-            return Post.objects.filter(filter)
-        return Post.objects.all()
+            qs = qs.filter(filter)
+
+        if skip:
+            qs = qs[skip::]
+
+        if first:
+            qs = qs[:first]
+
+        return qs
 
 
 class Mutation(graphene.ObjectType):
+    '''
+    that`s the field that you can use on mutation top level
+    '''
+
     create_post = CreatePost.Field()
+

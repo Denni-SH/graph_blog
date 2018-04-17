@@ -13,7 +13,3 @@ class Comment(models.Model):
     def __str__(self):
         return str(self.pk) + ' - ' + str(self.author) + ': "' + str(self.content) + '"'
 
-
-
-
-
